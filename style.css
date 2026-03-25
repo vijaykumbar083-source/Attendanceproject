@@ -5,7 +5,8 @@ body{
 
 h1{
     color: #333;
-    margin-top: 20px;
+    margin-top: 25px;
+    
 }
 
 #head{
@@ -56,4 +57,44 @@ button{
 
 #b3:hover{
     background-color: #545b62;
+}
+
+/*Register File Css */
+form{
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    width:350px;
+    margin:auto;
+    box-shadow:0px 4px 15px rgba(0,0,0,0.2);
+}
+
+label{
+    font-weight:bold;
+    color:#333;
+}
+
+#b4{
+    background-color: #28a745;
+}
+
+#b4:hover{
+    background-color: #1e7e34;
+}
+
+#b5{
+    background-color: #007bff;
+}
+
+#b5:hover{
+    background-color: #0056b3;
+}
+
+#name,
+#department{
+    height:30px;
+    width:220px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    padding-left:8px;
 }
