@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard | Smart Attendance</title>
+    <link rel="stylesheet" href="../design/dashboard.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+    <div id="Dashboard">
+        <div id="sidebar">
+            <h2 class="logo"><i class='bx bxs-user-badge'></i> User<span>Portal</span></h2>
+            <ul id="list">
+                <li class="active" onclick="showContent('UHome', this)"><i class='bx bxs-home-circle'></i> Dashboard</li>
+                <li onclick="showContent('UAttendance', this)"><i class='bx bxs-calendar-check'></i> My Attendance</li>
+                <li onclick="showContent('UProfile', this)"><i class='bx bxs-user-detail'></i> Profile</li>
+                <li class="logout" onclick="userLogout()"><i class='bx bxs-log-out'></i> Logout</li>
+            </ul>
+        </div>
+
+        <div id="main-wrapper">
+            
+            <div id="UHome" class="tab-content">
+                <header><h1>Welcome, <b id="displayUserName">Student</b></h1></header>
+                
+                <div class="card-grid">
+                    <div class="card">
+                        <h3><i class='bx bxs-map'></i> Step 1: Location</h3>
+                        <div class="status-box" style="padding: 15px; border-radius: 8px; background: #f4f4f4; margin-bottom: 15px;">
+                            <p>Status: <b id="loc-text" style="color: #666;">Not Verified</b></p>
+                        </div>
+                        <button id="loc-btn" class="btn-outline" onclick="verifyGPS()">Verify Real-Time GPS</button>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class='bx bxs-face'></i> Step 2: Biometric</h3>
+                        <div id="camera-container" style="display:none; margin-bottom: 15px;">
+                            <video id="webcam" autoplay muted width="100%" style="border-radius: 10px; border: 2px solid #008080; background: #000;"></video>
+                            <p style="font-size: 11px; text-align: center; color: #008080;">Scanning Facial Landmarks...</p>
+                        </div>
+                        <button id="scan-btn" class="btn-main" disabled onclick="startBiometricScan()">
+                            <i class='bx bx-lock-alt'></i> Complete Step 1 First
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Daily Session</h3>
+                    <div id="session-status-container" style="text-align: center; padding: 20px;"></div>
+                </div>
+            </div>
+
+            <div id="UAttendance" class="tab-content" style="display:none;">
+                <header><h1>Attendance <b>Insights</b></h1></header>
+                <div class="card-grid">
+                    <div class="card" style="text-align: center;">
+                        <h1 id="statPercentage" style="color: #008080; font-size: 40px;">0%</h1>
+                        <p>Attendance Rate</p>
+                    </div>
+                    <div class="card" style="text-align: center;">
+                        <h1 id="statTotalDays" style="color: #333; font-size: 40px;">0</h1>
+                        <p>Total Presences</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Recent Logs</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Location</th></tr>
+                        </thead>
+                        <tbody id="userHistoryTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="UProfile" class="tab-content" style="display:none;">
+                <header><h1>Personal <b>Details</b></h1></header>
+                <div class="card" style="max-width: 500px;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class='bx bxs-user-circle' style="font-size: 80px; color: #008080;"></i>
+                    </div>
+                    <label>Full Name</label>
+                    <input type="text" id="profName" disabled>
+                    <label>Student ID</label>
+                    <input type="text" id="profId" disabled>
+                    <label>Email</label>
+                    <input type="text" id="profEmail" disabled>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../javascript/user.js"></script>
+</body>
+</html>

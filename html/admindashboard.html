@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Smart Attendance</title>
+    <link rel="stylesheet" href="../design/dashboard.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+
+    <div id="Dashboard">
+        <div id="sidebar">
+            <h2 class="logo"><i class='bx bxs-shield-quarter'></i> Admin<span>Pro</span></h2>
+            <ul id="list">
+                <li class="active" onclick="showContent('Dcontent', this)"><i class='bx bxs-grid-alt'></i> Dashboard</li>
+                <li onclick="showContent('Ucontent', this)"><i class='bx bxs-group'></i> Users</li>
+                <li onclick="showContent('Acontent', this)"><i class='bx bxs-calendar-check'></i> Attendance</li>
+                <li onclick="showContent('Rcontent', this)"><i class='bx bxs-bar-chart-alt-2'></i> Reports</li>
+                <li onclick="showContent('Scontent', this)"><i class='bx bxs-cog'></i> Settings</li>
+                <li class="logout" onclick="logout()"><i class='bx bxs-log-out'></i> Logout</li>
+            </ul>
+        </div>
+
+        <div id="main-wrapper">
+            
+            <div id="Dcontent" class="tab-content">
+                <header><h1>Admin <b>Control Panel</b></h1></header>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3><i class='bx bxs-user-plus'></i> Enroll New User</h3>
+                        <form id="addUserForm">
+                            <input type="text" id="newUserName" placeholder="Full Name" required>
+                            <input type="text" id="newUserId" placeholder="Student ID" required>
+                            <input type="email" id="newUserEmail" placeholder="Email Address" required>
+                            
+                            <div style="display: flex; gap: 5px;">
+                                <input type="text" id="newUserPass" placeholder="Password">
+                                <button type="button" class="btn-outline" style="width: auto;" onclick="generatePass()">Generate</button>
+                            </div>
+
+                            <div id="reg-video-container" style="display:none; margin: 10px 0; text-align: center;">
+                                <video id="reg-webcam" autoplay muted width="100%" style="border-radius: 8px; border: 2px solid #008080; background: #000;"></video>
+                                <p style="font-size: 11px; color: #008080;">Live Camera Feed Active</p>
+                            </div>
+
+                            <button type="button" class="btn-outline" style="margin-bottom: 10px; width: 100%;" onclick="openRegistrationCam()">
+                                <i class='bx bxs-camera'></i> Scan Face Data
+                            </button>
+                            <button type="button" class="btn-main" onclick="adduser()">Finalize & Register</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3><i class='bx bxs-map-pin'></i> Current Zone</h3>
+                        <p>Location: <b id="displayLocation">--</b></p>
+                        <p style="font-size: 12px; color: #666;">Status: <span id="gpsStatus">Active</span></p>
+                        <button class="btn-outline" style="margin-top: 15px;" onclick="syncGPS()">Update GPS Location</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 20px;">
+                    <h3>Real-time Activity (Today)</h3>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>In Time</th><th>Out Time</th><th>Status</th></tr>
+                        </thead>
+                        <tbody id="quickAttendanceBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="Ucontent" class="tab-content" style="display:none;">
+                <header><h1>User Management</h1></header>
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3>Registered Users (<span id="userCount">0</span>)</h3>
+                        <input type="text" id="userSearch" placeholder="Search ID or Name..." onkeyup="searchUsers()">
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Name</th><th>Email</th><th>ID</th><th>Face Data</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="allUsersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="Acontent" class="tab-content" style="display:none;">
+                <header><h1>Complete Attendance Logs</h1></header>
+                <div class="card">
+                    <div class="filter-bar" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <input type="date" id="attendance-date">
+                        <button class="btn-outline" onclick="filterLogs()">Filter Records</button>
+                        <button class="btn-main" style="width: auto;" onclick="exportCSV()">Export CSV</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>ID</th><th>Name</th><th>Check-In</th><th>Check-Out</th></tr>
+                        </thead>
+                        <tbody id="fullLogTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="Rcontent" class="tab-content" style="display:none;">
+                <header><h1>System <b>Analytics</b></h1></header>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3><i class='bx bxs-pie-chart-alt-2'></i> Today's Presence</h3>
+                        <h1 id="attendancePercentage">0%</h1>
+                        <div style="background: #eee; border-radius: 10px; height: 10px; margin: 10px 0;">
+                            <div id="reportProgressBar" style="background: #008080; width: 0%; height: 100%; border-radius: 10px; transition: 1s;"></div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3><i class='bx bxs-time-five'></i> Not Logged In Yet</h3>
+                        <ul id="absentList" style="list-style: none; padding: 0;"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="Scontent" class="tab-content" style="display:none;">
+                <header><h1>System <b>Configuration</b></h1></header>
+                <div class="card-grid">
+                    <div class="card">
+                        <h3>Admin Profile</h3>
+                        <label>Full Name</label><input type="text" id="setAdminName">
+                        <label>Email</label><input type="email" id="setAdminEmail">
+                        <button class="btn-main" onclick="saveProfile()">Update Profile</button>
+                    </div>
+
+                    <div class="card">
+                        <h3>System Rules & Geofence</h3>
+                        <label>Institute Name</label>
+                        <input type="text" id="setInstitute">
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <div style="flex: 1;">
+                                <label>Latitude</label>
+                                <input type="number" id="setLat" step="any" placeholder="0.000000">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Longitude</label>
+                                <input type="number" id="setLng" step="any" placeholder="0.000000">
+                            </div>
+                        </div>
+                        
+                        <button class="btn-outline" style="margin-top: 10px; width: 100%;" onclick="captureAdminLocation()">
+                            <i class='bx bx-current-location'></i> Get Current Device GPS
+                        </button>
+
+                        <label style="margin-top: 10px; display: block;">GPS Tolerance (Meters)</label>
+                        <input type="number" id="setGps" placeholder="e.g. 100">
+                        
+                        <button class="btn-main" style="margin-top: 15px;" onclick="saveSystemRules()">Save System Rules</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="../javascript/admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,166 @@
+/* FACEMARK DARK THEME MASTER STYLES */
+
+:root {
+    --bg-dark: #0a0c10;        /* Deepest navy/black */
+    --card-bg: #11141b;      /* Slightly lighter card background */
+    --accent-cyan: #00f2ff;   /* Neon Cyan */
+    --accent-purple: #a855f7; /* Vibrant Purple */
+    --text-white: #ffffff;
+    --text-gray: #94a3b8;
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-white);
+    line-height: 1.6;
+}
+
+/* --- AUTH PAGE CONTAINER --- */
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: radial-gradient(circle at top right, #1e1b4b, #0a0c10); /* Subtle glow */
+    padding: 20px;
+}
+
+/* --- DARK GLASS CARD --- */
+.login-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    padding: 1rem;
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+}
+
+h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, #fff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+p {
+    color: var(--text-gray);
+    margin-bottom: 2.5rem;
+    font-size: 0.95rem;
+}
+
+/* --- FORM ELEMENTS --- */
+.input-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.6rem;
+    color: var(--accent-cyan); /* Neon label */
+}
+
+input {
+    width: 100%;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+}
+
+/* --- THE NEON BUTTON --- */
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    margin-top: 1rem;
+    background: var(--accent-cyan);
+    color: #000; /* Dark text on bright button */
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 242, 255, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5);
+    filter: brightness(1.1);
+}
+
+/* --- ICON STYLING --- */
+.icon-square {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    font-size: 1.8rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+}
+
+/* --- FOOTER & LINKS --- */
+.footer-links {
+    margin-top: 2rem;
+    border-top: 1px solid var(--glass-border);
+    padding-top: 1.5rem;
+}
+
+.footer-links a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+/* --- REGISTRATION FIELDSET (Dark Version) --- */
+fieldset {
+    border: 1px solid var(--glass-border);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    background: rgba(255, 255, 255, 0.01);
+}
+
+legend {
+    color: var(--accent-purple);
+    font-weight: 800;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}

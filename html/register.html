@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Register | FaceMark</title>
+    <link rel="stylesheet" href="../design/style.css">
+</head>
+<body class="auth-page">
+    <div class="login-card">
+        <h2>Admin Register</h2>
+        <form>
+            <div class="input-group"><label>First Name</label><input type="text" id="fname" required></div>
+            <div class="input-group"><label>Last Name</label><input type="text" id="lname" required></div>
+            <div class="input-group"><label>Email</label><input type="email" id="email" required></div>
+            <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
+            <div class="input-group"><label>Confirm Password</label><input type="password" id="confirm-password" required></div>
+            <button type="button" onclick="handleAdminRegister()" class="btn-primary">Register Admin</button>
+        </form>
+        <div class="footer-links"><a href="adminlogin.html">Back to Login</a></div>
+    </div>
+    <script src="../javascript/auth.js"></script>
+</body>
+</html>
