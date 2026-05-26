@@ -10,9 +10,9 @@ if (!activeSession) {
 const currentUser = JSON.parse(activeSession);
 let attendanceData = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
 let currentStream = null;
-let modelsLoaded = false;
 
-/** * DYNAMIC CONFIGURATION 
+/** 
+ * DYNAMIC CONFIGURATION 
  * We initialize this as null; it will be populated by GPS on-the-fly.
  */
 let systemConfig = {
@@ -103,6 +103,7 @@ function verifyGPS() {
             text.style.color = "green";
             unlockFaceStep();
         } else {
+            // This is where your 107m error was coming from
             text.innerText = `Out of Range (${Math.round(distance)}m from ${config.institute})`;
             text.style.color = "red";
             btn.disabled = false;
@@ -119,122 +120,30 @@ function unlockFaceStep() {
     scanBtn.style.background = "#008080";
 }
 
-// --- CORE AI MODEL DEPENDENCY ENGINE LOADING ---
-async function loadPortalModels() {
-    if (modelsLoaded) return true;
-    const infoText = document.querySelector('#camera-container p');
-    if (infoText) infoText.innerText = "⏳ Initializing Facial Recognition AI Core...";
-    
-    try {
-        // Point to the CDN directory containing pre-trained models
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        
-        modelsLoaded = true;
-        if (infoText) infoText.innerText = "🎥 Models Active. Scanning Face...";
-        return true;
-    } catch (err) {
-        console.error("AI Network configuration failed:", err);
-        if (infoText) infoText.innerText = "❌ Neural Network Loading Failed.";
-        return false;
-    }
-}
-
 // --- STEP 2: BIOMETRIC SCAN ---
 async function startBiometricScan() {
     const container = document.getElementById('camera-container');
     const video = document.getElementById('webcam');
     const scanBtn = document.getElementById('scan-btn');
-    const infoText = container.querySelector('p');
 
     container.style.display = "block";
-    scanBtn.innerText = "Processing Matrix Models...";
-    scanBtn.disabled = true;
-
-    // Load AI Models dynamically prior to checking streaming hardware
-    const modelsReady = await loadPortalModels();
-    if (!modelsReady) {
-        scanBtn.innerText = "Retry Scan";
-        scanBtn.disabled = false;
-        return;
-    }
+    scanBtn.innerText = "Processing...";
 
     try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { width: 320, height: 240, frameRate: { ideal: 15 } } 
-        });
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
         video.srcObject = currentStream;
 
-        // Give the camera hardware 1 second to balance exposures, then parse facial coordinates
-        setTimeout(async () => {
-            await verifyIdentityBiometrics(video, container, scanBtn, infoText);
-        }, 1000);
+        setTimeout(() => {
+            processAttendance();
+            stopCamera();
+            container.style.display = "none";
+        }, 3000);
 
     } catch (err) {
         alert("Camera Access Denied.");
         container.style.display = "none";
         scanBtn.innerText = "Retry Scan";
-        scanBtn.disabled = false;
     }
-}
-
-// --- REAL-TIME BIOMETRIC VALIDATION LOOP ---
-async function verifyIdentityBiometrics(video, container, scanBtn, infoText) {
-    try {
-        // Run face mapping capture pass
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-        if (!detection) {
-            if (infoText) infoText.innerText = "⚠️ Position face inside frame boundaries...";
-            // Loop frame analysis iteration
-            setTimeout(() => verifyIdentityBiometrics(video, container, scanBtn, infoText), 500);
-            return;
-        }
-
-        // Fetch up-to-date registered user array metadata directly from central dataset storage
-        const registeredUsersList = JSON.parse(localStorage.getItem('smart_users')) || [];
-        const systemRecord = registeredUsersList.find(u => u.id === currentUser.id);
-
-        if (!systemRecord || !systemRecord.faceDescriptor) {
-            alert("No registered face footprint profiles found. Contact Admin to re-enroll.");
-            resetPortalScanner(container, scanBtn);
-            return;
-        }
-
-        // Reconstruct Typed Array from local database record structure
-        const referenceDescriptor = new Float32Array(systemRecord.faceDescriptor);
-        const liveDescriptor = detection.descriptor;
-
-        // Compute Euclidean Distance between biometric vectors
-        const distance = faceapi.euclideanDistance(liveDescriptor, referenceDescriptor);
-        
-        // standard match verification threshold parameters (Strict limit 0.55)
-        if (distance <= 0.55) {
-            if (infoText) infoText.innerText = "🔒 Signature Verified! Logging session entry...";
-            setTimeout(() => {
-                processAttendance();
-                resetPortalScanner(container, scanBtn);
-            }, 800);
-        } else {
-            alert("Biometric Mismatch. Access Denied.");
-            resetPortalScanner(container, scanBtn);
-        }
-
-    } catch (error) {
-        console.error("Biometric matching iteration failure:", error);
-        alert("Verification System Encountered an Processing Exception.");
-        resetPortalScanner(container, scanBtn);
-    }
-}
-
-function resetPortalScanner(container, scanBtn) {
-    stopCamera();
-    if (container) container.style.display = "none";
-    updateUI();
 }
 
 // --- ATTENDANCE PROCESSING ---
@@ -278,10 +187,7 @@ function updateUI() {
         if (statusBox) statusBox.innerHTML = `<p>Ready for Check-in at ${systemConfig.institute}</p>`;
     } else if (!userLog.checkOut) {
         if (statusBox) statusBox.innerHTML = `<p style="color:#008080;">Signed In at ${userLog.checkIn}</p>`;
-        if (scanBtn) {
-            scanBtn.innerText = "Check Out";
-            scanBtn.disabled = false;
-        }
+        if (scanBtn) scanBtn.innerText = "Check Out";
     } else {
         if (statusBox) statusBox.innerHTML = "<p style=\"color:green;\">Attendance Complete</p>";
         if (scanBtn) {
@@ -326,18 +232,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 function stopCamera() {
-    if (currentStream) {
-        currentStream.getTracks().forEach(t => t.stop());
-        currentStream = null;
-    }
+    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
 }
 
 function userLogout() {
     sessionStorage.removeItem('active_user');
     window.location.href = "index.html";
-}
-function userlogout() {
-   sessionStorage.removeItem('active_user') {
-        window.location.href = "../index.html";
-    }
 }

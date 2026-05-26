@@ -2,7 +2,8 @@
 let users = JSON.parse(localStorage.getItem('smart_users')) || [];
 let attendanceLogs = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
 
-/** * DYNAMIC CONFIG 
+/** 
+ * DYNAMIC CONFIG 
  * Initialized with empty/generic values to be filled by live detection
  */
 let config = JSON.parse(localStorage.getItem('smart_config')) || {
@@ -15,8 +16,6 @@ let config = JSON.parse(localStorage.getItem('smart_config')) || {
 };
 
 let currentStream = null;
-let modelsLoaded = false;
-let currentFaceDescriptor = null; // Holds the scanned face array signature
 
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -151,27 +150,16 @@ function adduser() {
         return alert("User ID already exists.");
     }
 
-    // Explicit Verification Guard ensuring face scan was run before final record submission
-    if (!currentFaceDescriptor) {
-        return alert("Error: Please capture and scan facial vector dataset mapping before final registration.");
-    }
-
     const newUser = { 
         name, id, email, password,
         enrolledDate: new Date().toLocaleDateString(),
-        faceActive: true,
-        // Convert array to numeric structure format string to store safely inside LocalStorage database
-        faceDescriptor: Array.from(currentFaceDescriptor)
+        faceActive: true 
     };
 
     users.push(newUser);
     saveData('smart_users', users);
     
     alert(`Success: ${name} is now registered.`);
-    
-    // Clear registration cache
-    currentFaceDescriptor = null;
-    
     const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) addUserForm.reset();
     
@@ -203,7 +191,7 @@ function refreshData() {
                 <td>${u.name}</td>
                 <td>${u.email}</td>
                 <td><b>${u.id}</b></td>
-                <td style="color: #008080; font-weight: 600;">${u.faceDescriptor ? '✔ Enrolled' : '❌ Missing'}</td>
+                <td style="color: #008080; font-weight: 600;">✔ Active</td>
                 <td>
                     <button class="btn-outline" style="border-color:#e74c3c; color:#e74c3c; cursor:pointer;" onclick="removeUser(${i})">
                         <i class='bx bx-trash'></i> Delete
@@ -289,19 +277,12 @@ function saveProfile() {
     const name = document.getElementById('setAdminName').value.trim();
     const email = document.getElementById('setAdminEmail').value.trim();
 
-    if (!name || !email) {
-        return alert("Please fill out both Name and Email fields.");
+    if (name && email) {
+        config.adminName = name;
+        config.adminEmail = email;
+        saveData('smart_config', config);
+        alert("Admin Profile Updated.");
     }
-
-    config.adminName = name;
-    config.adminEmail = email;
-    
-    saveData('smart_config', config);
-    
-    // Refresh visual layers immediately across application
-    applyConfig();
-    
-    alert("Admin Profile Updated.");
 }
 
 function saveSystemRules() {
@@ -355,86 +336,16 @@ function generatePass() {
     if (passInput) passInput.value = pass;
 }
 
-// --- CORE AI COGNITIVE COMPUTATION MODULES ---
-async function loadFaceApiModels() {
-    if (modelsLoaded) return true;
-    const statusText = document.querySelector('#reg-video-container p');
-    if (statusText) statusText.innerText = "⏳ Loading Biometric AI Models...";
-    
-    try {
-        // Points to CDN model binary configuration streams
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-        
-        modelsLoaded = true;
-        if (statusText) statusText.innerText = "✨ AI Framework Operational.";
-        return true;
-    } catch (err) {
-        console.error("Model engine crash: ", err);
-        if (statusText) statusText.innerText = "❌ Engine Error loading weights.";
-        return false;
-    }
-}
-
 async function openRegistrationCam() {
     const video = document.getElementById('reg-webcam');
     const container = document.getElementById('reg-video-container');
-    const statusText = container.querySelector('p');
-    
     if (container) container.style.display = 'block';
-    
-    // Trigger lazy model engine load sequence
-    const modelsReady = await loadFaceApiModels();
-    if (!modelsReady) return;
-
     try {
-        currentStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { width: 320, height: 240, frameRate: { ideal: 15 } } 
-        });
-        if (video) {
-            video.srcObject = currentStream;
-            // Fire frame-capture validation watch loops once video begins drawing
-            video.addEventListener('play', () => {
-                analyzeRegistrationFrame(video, statusText);
-            });
-        }
+        currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (video) video.srcObject = currentStream;
     } catch (err) { 
         alert("Camera access denied."); 
     }
-}
-
-// Tracking Loop for Scanning Faces
-async function analyzeRegistrationFrame(video, statusLabel) {
-    if (!currentStream || video.paused || video.ended) return;
-
-    try {
-        // Runs optimized TinyFace feature scanning
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 160 }))
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-        if (detection) {
-            currentFaceDescriptor = detection.descriptor;
-            if (statusLabel) {
-                statusLabel.innerText = "🔒 Biometric Lock Acquired! Ready to save.";
-                statusLabel.style.color = "#2e7d32";
-            }
-        } else {
-            if (statusLabel) {
-                statusLabel.innerText = "🎥 Align face clearly inside camera frame...";
-                statusLabel.style.color = "#008080";
-            }
-        }
-    } catch (e) {
-        console.warn("Frame analysis skip loop context window.", e);
-    }
-
-    // Recurse scan iteration delay processing threshold
-    setTimeout(() => {
-        if (currentStream) analyzeRegistrationFrame(video, statusLabel);
-    }, 400);
 }
 
 function stopCamera() {
@@ -467,7 +378,5 @@ function exportCSV() {
 }
 
 function logout() {
-    if (confirm("Logout from Admin Panel?")) {
-        window.location.href = "../index.html";
-    }
+    if (confirm("Logout from Admin Panel?")) window.location.href = "index.html";
 }
