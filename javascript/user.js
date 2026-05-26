@@ -237,5 +237,5 @@ function stopCamera() {
 
 function userLogout() {
     sessionStorage.removeItem('active_user');
-    window.location.href = "index.html";
+    window.location.href = "../index.html";
 }
