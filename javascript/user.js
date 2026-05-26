@@ -336,3 +336,8 @@ function userLogout() {
     sessionStorage.removeItem('active_user');
     window.location.href = "index.html";
 }
+function userlogout() {
+   sessionStorage.removeItem('active_user') {
+        window.location.href = "../index.html";
+    }
+}

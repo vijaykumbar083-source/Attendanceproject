@@ -467,5 +467,7 @@ function exportCSV() {
 }
 
 function logout() {
-    if (confirm("Logout from Admin Panel?")) window.location.href = "index.html";
+    if (confirm("Logout from Admin Panel?")) {
+        window.location.href = "../index.html";
+    }
 }
