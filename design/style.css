@@ -1,15 +1,17 @@
-/* FACEMARK DARK THEME MASTER STYLES */
+/* ==========================================================================
+   FACEMARK DASHBOARD LIGHT/TEAL INTEGRATION MASTER STYLES
+   ========================================================================== */
 
 :root {
-    --bg-dark: #0a0c10;        /* Deepest navy/black */
-    --card-bg: #11141b;      /* Slightly lighter card background */
-    --accent-cyan: #00f2ff;   /* Neon Cyan */
-    --accent-purple: #a855f7; /* Vibrant Purple */
-    --text-white: #ffffff;
-    --text-gray: #94a3b8;
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --bg-dark: #00272f;        /* Precise dark teal shade from your dashboard sidebar */
+    --card-bg: #ffffff;        /* Crisp clean white background from your login reference */
+    --accent-cyan: #008080;    /* Active element component teal / primary actions */
+    --text-white: #0f172a;     /* Deep slate font for sharp clarity inside white cards */
+    --text-gray: #64748b;      /* Soft description gray text layer */
+    --glass-border: #e2e8f0;   /* Structural frame boundaries and light field borders */
 }
 
+/* --- SYSTEM RESET --- */
 * {
     margin: 0;
     padding: 0;
@@ -29,137 +31,166 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: radial-gradient(circle at top right, #1e1b4b, #0a0c10); /* Subtle glow */
-    padding: 20px;
+    background-color: var(--bg-dark); 
+    padding: 40px 20px;
 }
 
-/* --- DARK GLASS CARD --- */
+/* --- SIDE-BY-SIDE CARD LAYOUT WRAPPER --- */
+.card-row {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;        /* Dynamically forces sibling cards to maintain identical height */
+    gap: 30px;                   /* Clean negative breathing space gap between portals */
+    flex-wrap: wrap;             /* Flow breakdown wrap safety feature for mobile responsive viewports */
+    max-width: 920px;            /* Bound context constraint holding two 440px elements perfectly */
+    width: 100%;
+}
+
+/* --- SYSTEM LOGIN CARDS --- */
 .login-card {
     background: var(--card-bg);
-    border: 1px solid var(--glass-border);
-    padding: 1rem;
-    border-radius: 24px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    width: 100%;
-    max-width: 480px;
-    text-align: center;
+    border: none;
+    padding: 40px;               
+    border-radius: 24px;         
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35); /* High depth drop shadow context split to pop over teal backdrop */
+    flex: 1;                     /* Auto growth distribution controller */
+    min-width: 300px;            /* Anti-collapse structural minimum baseline threshold */
+    max-width: 440px;            
+    text-align: left;            
+    display: flex;
+    flex-direction: column;      /* Uniform stack behavior forcing main actions to stay perfectly floor aligned */
 }
 
+/* --- TYPOGRAPHY --- */
 h2 {
-    font-size: 2rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
-    background: linear-gradient(to right, #fff, #94a3b8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-size: 32px;             
+    font-weight: 700;            
+    margin-bottom: 8px;
+    color: #1e293b;            
 }
 
 p {
     color: var(--text-gray);
-    margin-bottom: 2.5rem;
-    font-size: 0.95rem;
+    margin-bottom: 28px;         
+    font-size: 14px;             
+    flex-grow: 1;                /* Consumes excess card height so trailing buttons match position perfectly */
 }
 
 /* --- FORM ELEMENTS --- */
 .input-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 20px;         
     text-align: left;
 }
 
 label {
     display: block;
-    font-size: 0.8rem;
+    font-size: 13px;             
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 0.6rem;
-    color: var(--accent-cyan); /* Neon label */
+    margin-bottom: 8px;
+    color: #1e293b;            
 }
 
 input {
     width: 100%;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--glass-border);
-    border-radius: 12px;
-    color: white;
-    font-size: 1rem;
-    transition: all 0.3s ease;
+    padding: 12px 16px;          
+    background: #ffffff;
+    border: 1px solid #cbd5e1; 
+    border-radius: 12px;         
+    color: #0f172a;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+input::placeholder {
+    color: #94a3b8;
 }
 
 input:focus {
     outline: none;
     border-color: var(--accent-cyan);
-    background: rgba(255, 255, 255, 0.07);
-    box-shadow: 0 0 15px rgba(0, 242, 255, 0.1);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 128, 128, 0.15); 
 }
 
-/* --- THE NEON BUTTON --- */
-.btn-primary {
+/* --- COMPONENT BUTTONS & LINKS (Treated as actions) --- */
+.btn-primary, .login-card a {
+    display: block;
     width: 100%;
-    padding: 1rem;
-    margin-top: 1rem;
+    text-align: center;
+    text-decoration: none;
+    padding: 14px;               
+    margin-top: auto;            /* Auto snaps action buttons directly to card container floor level */
     background: var(--accent-cyan);
-    color: #000; /* Dark text on bright button */
+    color: #ffffff;             
     border: none;
     border-radius: 12px;
-    font-weight: 800;
-    font-size: 1rem;
+    font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
-    box-shadow: 0 4px 20px rgba(0, 242, 255, 0.3);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 128, 128, 0.2);
+    transition: all 0.2s ease;
 }
 
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 242, 255, 0.5);
-    filter: brightness(1.1);
+.btn-primary:hover, .login-card a:hover {
+    transform: translateY(-1px); 
+    background: #006666;        /* Controlled secondary darker deep interactive click accent overlay */
+    box-shadow: 0 6px 16px rgba(0, 102, 102, 0.35);
 }
 
-/* --- ICON STYLING --- */
+/* --- ICON CONTAINER SYSTEM --- */
 .icon-square {
     width: 60px;
     height: 60px;
-    margin: 0 auto 1.5rem;
+    margin: 0 0 1.5rem;          
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 16px;
     font-size: 1.8rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--glass-border);
+    background: rgba(0, 128, 128, 0.08); 
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 128, 128, 0.15);
 }
 
 /* --- FOOTER & LINKS --- */
 .footer-links {
-    margin-top: 2rem;
-    border-top: 1px solid var(--glass-border);
-    padding-top: 1.5rem;
+    margin-top: 24px;
+    text-align: center;          
+    font-size: 14px;
+    color: var(--text-gray);
 }
 
 .footer-links a {
-    color: var(--accent-cyan);
-    text-decoration: none;
+    display: inline;
+    width: auto;
+    background: none;
+    padding: 0;
+    margin: 0;
+    color: var(--accent-cyan);   
     font-weight: 600;
-    font-size: 0.9rem;
+    box-shadow: none;
 }
 
 .footer-links a:hover {
     text-decoration: underline;
+    background: none;
+    color: #006666;
+    box-shadow: none;
+    transform: none;
 }
 
-/* --- REGISTRATION FIELDSET (Dark Version) --- */
+/* --- REGISTRATION FIELDSET --- */
 fieldset {
     border: 1px solid var(--glass-border);
     border-radius: 15px;
     padding: 1.5rem;
     margin-bottom: 2rem;
-    background: rgba(255, 255, 255, 0.01);
+    background: #f8fafc;
 }
 
 legend {
-    color: var(--accent-purple);
-    font-weight: 800;
+    color: var(--accent-cyan);
+    font-weight: 700;
     padding: 0 10px;
     font-size: 0.8rem;
     text-transform: uppercase;

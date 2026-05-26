@@ -1,13 +1,22 @@
+/* ==========================================================================
+   FACEMARK LIGHT/TEAL HYBRID MASTER LANDING STYLES
+   ========================================================================== */
+
 :root {
-    --bg-dark: #020617;
-    --accent-cyan: #00f2ff;
-    --accent-purple: #c084fc;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    /* Color Palette matched exactly to your dashboard sidebar and login elements */
+    --bg-dark: #00272f;         /* Precise deep dark teal background color */
+    --accent-cyan: #00f2ff;    /* Neon Cyan accent for labels/badges */
+    --accent-teal: #008080;    /* Master dashboard primary button / action teal */
+    --accent-purple: #c084fc;  /* Gradient purple highlight */
+    
+    --text-main: #f8fafc;      /* Crisp white text for dark canvas */
+    --text-muted: #94a3b8;     /* Secondary soft gray description text */
+    
     --glass-bg: rgba(255, 255, 255, 0.03);
     --glass-border: rgba(255, 255, 255, 0.1);
 }
 
+/* --- GLOBAL RESETS --- */
 * {
     margin: 0;
     padding: 0;
@@ -16,18 +25,19 @@
 }
 
 body {
-    background: radial-gradient(circle at 0% 0%, #0d1b1e 0%, var(--bg-dark) 100%);
+    background-color: var(--bg-dark);
     color: var(--text-main);
     line-height: 1.6;
     scroll-behavior: smooth;
+    overflow-x: hidden;
 }
 
-/* Navbar */
+/* --- NAVIGATION BAR --- */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 2rem 5%;
+    padding: 1.5rem 5%;
     max-width: 1300px;
     margin: 0 auto;
 }
@@ -36,6 +46,7 @@ nav {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -1px;
+    color: var(--text-main);
 }
 
 .nav-links a {
@@ -43,47 +54,58 @@ nav {
     text-decoration: none;
     margin: 0 20px;
     font-size: 0.9rem;
-    transition: 0.3s;
+    font-weight: 500;
+    transition: color 0.3s ease;
 }
 
-.nav-links a:hover { color: var(--accent-cyan); }
+.nav-links a:hover {
+    color: var(--accent-cyan);
+}
 
 .btn-cta {
-    background: var(--accent-cyan);
-    color: #000;
+    background: var(--accent-teal);
+    color: #ffffff;
     padding: 10px 24px;
     border-radius: 50px;
     font-weight: 700;
     border: none;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+    font-size: 0.9rem;
+    box-shadow: 0 4px 15px rgba(0, 128, 128, 0.3);
+    transition: all 0.3s ease;
 }
 
-/* Hero Section */
+.btn-cta:hover {
+    background: #006666;
+    transform: translateY(-1px);
+}
+
+/* --- HERO SECTION --- */
 .hero {
     text-align: center;
-    padding: 80px 5%;
-    max-width: 1000px;
+    padding: 60px 5% 100px;
+    max-width: 1100px;
     margin: 0 auto;
 }
 
 .badge {
     display: inline-block;
-    background: rgba(0, 242, 255, 0.1);
-    border: 1px solid rgba(0, 242, 255, 0.2);
+    background: rgba(0, 242, 255, 0.08);
+    border: 1px solid rgba(0, 242, 255, 0.15);
     padding: 6px 16px;
     border-radius: 50px;
     font-size: 0.75rem;
     color: var(--accent-cyan);
     text-transform: uppercase;
     letter-spacing: 1px;
+    font-weight: 600;
     margin-bottom: 2rem;
 }
 
 h1 {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-size: clamp(2.5rem, 6vw, 4.2rem);
     font-weight: 900;
-    line-height: 1.1;
+    line-height: 1.15;
     margin-bottom: 1.5rem;
     letter-spacing: -2px;
 }
@@ -96,62 +118,111 @@ h1 span {
 
 .subtitle {
     color: var(--text-muted);
-    font-size: 1.2rem;
+    font-size: 1.15rem;
     max-width: 700px;
-    margin: 0 auto 3rem;
+    margin: 0 auto 4rem;
 }
 
-/* Cards */
+/* --- SIDE-BY-SIDE ACCESS PORTAL CARDS --- */
 .card-row {
     display: flex;
     justify-content: center;
+    align-items: stretch;        /* Ensures cards stay matching heights */
     gap: 30px;
-    flex-wrap: wrap;
+    flex-wrap: wrap;             /* Drops gracefully side-by-side on mobile screens */
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
 }
 
 .login-card {
-    background: var(--glass-bg);
-    border: 1px solid var(--glass-border);
-    backdrop-filter: blur(12px);
+    background: #ffffff;         /* Pure crisp white card matching requested form snippet */
+    border: none;
     padding: 40px;
     border-radius: 24px;
-    width: 350px;
+    flex: 1;                     /* Dynamically shares equal width row space */
+    min-width: 300px;            /* Avoids compressing on tight viewports */
+    max-width: 420px;
     text-align: left;
-    transition: 0.4s;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;      /* Pushes anchor links uniformly to card bottoms */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .login-card:hover {
-    transform: translateY(-10px);
-    border-color: var(--accent-cyan);
-    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-8px);
+    box-shadow: 0 28px 50px rgba(0, 0, 0, 0.45);
 }
 
-.icon-square {
-    width: 50px;
-    height: 50px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
+.login-card .icon-square {
+    width: 55px;
+    height: 55px;
+    background: rgba(0, 128, 128, 0.08); /* Clean brand-integrated backing */
+    border: 1px solid rgba(0, 128, 128, 0.15);
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin-bottom: 25px;
     font-size: 1.5rem;
+    color: var(--accent-teal);
 }
 
-.login-card h3 { margin-bottom: 10px; }
-.login-card p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
-.login-card a { color: var(--accent-cyan); text-decoration: none; font-weight: 700; }
+.login-card h3 { 
+    margin-bottom: 12px; 
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: #1e293b;             /* Deep slate text for inner card text readability */
+}
 
-/* Features & Steps */
-.features, .how-it-works {
-    padding: 100px 5%;
+.login-card p { 
+    color: #64748b;             /* Secondary text gray layer */
+    margin-bottom: 35px; 
+    font-size: 0.95rem;
+    flex-grow: 1;               /* Makes descriptions take up remaining layout height */
+}
+
+.login-card a { 
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    background: var(--accent-teal); /* Dark teal button background */
+    color: #ffffff; 
+    text-decoration: none; 
+    font-weight: 600; 
+    font-size: 14px;
+    padding: 14px;              /* Exact comfortable padding height */
+    border-radius: 12px;
+    transition: background 0.2s ease;
+}
+
+.login-card a:hover {
+    background: #006666;        /* Subtle deep click state overlay */
+}
+
+/* --- SYSTEM FEATURES SECTION --- */
+.features {
+    padding: 90px 5%;
     max-width: 1200px;
     margin: 0 auto;
+    border-top: 1px solid var(--glass-border);
 }
 
-.section-header { text-align: center; margin-bottom: 60px; }
-.section-header h2 { font-size: 3rem; letter-spacing: -1px; }
-.section-header h2 span { color: var(--accent-cyan); }
+.section-header { 
+    text-align: center; 
+    margin-bottom: 60px; 
+}
+
+.section-header h2 { 
+    font-size: 2.8rem; 
+    font-weight: 800;
+    letter-spacing: -1px; 
+}
+
+.section-header h2 span { 
+    color: var(--accent-cyan); 
+}
 
 .features-grid {
     display: grid;
@@ -160,10 +231,47 @@ h1 span {
 }
 
 .f-item {
-    padding: 35px;
+    padding: 40px 35px;
     border-radius: 20px;
     border: 1px solid var(--glass-border);
-    background: rgba(255, 255, 255, 0.01);
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px);
+    transition: border-color 0.3s ease;
+}
+
+.f-item:hover {
+    border-color: rgba(0, 242, 255, 0.3);
+}
+
+.f-item .icon-square {
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+}
+
+.f-item h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.f-item p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* --- PROCESS / HOW IT WORKS SECTION --- */
+.how-it-works {
+    padding: 90px 5% 120px;
+    max-width: 1200px;
+    margin: 0 auto;
+    border-top: 1px solid var(--glass-border);
 }
 
 .step-container {
@@ -172,11 +280,26 @@ h1 span {
     flex-wrap: wrap;
 }
 
-.step { flex: 1; min-width: 250px; }
+.step { 
+    flex: 1; 
+    min-width: 260px; 
+}
+
 .step-num {
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 900;
     color: rgba(0, 242, 255, 0.1);
     line-height: 1;
+    margin-bottom: 15px;
+}
+
+.step h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
     margin-bottom: 10px;
+}
+
+.step p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
 }

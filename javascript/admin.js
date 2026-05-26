@@ -20,7 +20,7 @@ let currentStream = null;
 // Initialize Dashboard
 document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('attendance-date');
-    if(dateInput) dateInput.valueAsDate = new Date();
+    if (dateInput) dateInput.valueAsDate = new Date();
     
     // Automatically try to detect where the Admin is currently managing from
     detectCurrentAdminLocation();
@@ -29,34 +29,36 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshData();
 });
 
-// --- NEW: DYNAMIC LOCATION DETECTION ---
+// --- DYNAMIC LOCATION DETECTION (On Load) ---
 async function detectCurrentAdminLocation() {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
         
-        // Only update if not already set or if explicitly requested
         try {
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`
             );
             const data = await response.json();
             
+            // Comprehensive fallback parsing chain for real location names
             const detectedName = data.address.amenity || 
                                  data.address.university || 
                                  data.address.building || 
+                                 data.address.office ||
+                                 data.address.point_of_interest ||
+                                 (data.address.road && data.address.suburb ? `${data.address.road}, ${data.address.suburb}` : null) ||
+                                 data.address.suburb ||
+                                 data.address.city ||
                                  data.display_name.split(',')[0];
 
             // Update UI element if it exists
             const displayLoc = document.getElementById('displayLocation');
-            if(displayLoc) displayLoc.innerText = detectedName;
-            
-            // Optionally update config if you want it to auto-save the current campus
-            // config.institute = detectedName; 
+            if (displayLoc) displayLoc.innerText = detectedName;
             
         } catch (error) {
-            console.log("Reverse geocoding failed, using coordinates only.");
+            console.error("Reverse geocoding failed on load, using coordinates only.", error);
         }
     });
 }
@@ -65,63 +67,74 @@ async function detectCurrentAdminLocation() {
 function showContent(id, element) {
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     const target = document.getElementById(id);
-    if(target) target.style.display = 'block';
+    if (target) target.style.display = 'block';
     
     document.querySelectorAll('#list li').forEach(l => l.classList.remove('active'));
-    if(element) element.classList.add('active');
+    if (element) element.classList.add('active');
 
     if (id === 'Rcontent') renderAnalytics();
 }
 
-// --- UPDATED: REAL GPS TRACKER LOGIC ---
-// --- ADMIN DASHBOARD: SYSTEM RULES LOGIC ---
-
+// --- REAL GPS TRACKER LOGIC ---
 async function captureAdminLocation() {
     const gpsStatus = document.getElementById('gpsStatus');
     const latInput = document.getElementById('setLat');
     const lngInput = document.getElementById('setLng');
     const instInput = document.getElementById('setInstitute');
 
-    if (!navigator.geolocation) return alert("GPS not supported.");
+    if (!navigator.geolocation) return alert("GPS not supported by this browser.");
 
-    gpsStatus.innerText = "🛰️ Syncing with Satellites...";
-    gpsStatus.style.color = "orange";
+    if (gpsStatus) {
+        gpsStatus.innerText = "🛰️ Syncing with Satellites...";
+        gpsStatus.style.color = "orange";
+    }
 
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude, accuracy } = position.coords;
 
-        // Populate inputs
-        latInput.value = latitude.toFixed(6);
-        lngInput.value = longitude.toFixed(6);
+        // Populate dynamic coordinate inputs
+        if (latInput) latInput.value = latitude.toFixed(6);
+        if (lngInput) lngInput.value = longitude.toFixed(6);
         
-        // Reverse Geocode to get the Building Name
         try {
+            // Reverse Geocode using OpenStreetMap Nominatim
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`);
             const data = await res.json();
-            const name = data.address.amenity || data.address.university || data.address.building || "Custom Campus";
             
-            instInput.value = name;
-            gpsStatus.innerText = `✅ Locked: ${name} (Accuracy: ${Math.round(accuracy)}m)`;
-            gpsStatus.style.color = "#008080";
+            // Progressive lookup chain ensuring real location names are assigned
+            let realLocationName = "";
+            if (data && data.address) {
+                realLocationName = data.address.amenity || 
+                                   data.address.university || 
+                                   data.address.building || 
+                                   data.address.office ||
+                                   data.address.point_of_interest ||
+                                   (data.address.road && data.address.suburb ? `${data.address.road}, ${data.address.suburb}` : null) ||
+                                   data.address.suburb || 
+                                   data.address.city ||
+                                   data.display_name.split(',')[0];
+            } else {
+                realLocationName = `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            }
+            
+            if (instInput) instInput.value = realLocationName;
+            if (gpsStatus) {
+                gpsStatus.innerText = `✅ Locked: ${realLocationName} (Accuracy: ${Math.round(accuracy)}m)`;
+                gpsStatus.style.color = "#008080";
+            }
         } catch (e) {
-            gpsStatus.innerText = "✅ Coordinates Captured.";
+            console.error("Reverse geocoding error during dynamic capture:", e);
+            if (gpsStatus) gpsStatus.innerText = "✅ Coordinates Captured (Address lookup timed out).";
         }
     }, (err) => {
-        alert("Error: " + err.message);
-    }, { enableHighAccuracy: true });
+        alert("Dynamic GPS Error: " + err.message);
+        if (gpsStatus) {
+            gpsStatus.innerText = "❌ GPS Lock Failed";
+            gpsStatus.style.color = "red";
+        }
+    }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
-function saveSystemRules() {
-    const newConfig = {
-        institute: document.getElementById('setInstitute').value,
-        lat: parseFloat(document.getElementById('setLat').value),
-        lng: parseFloat(document.getElementById('setLng').value),
-        gps: parseInt(document.getElementById('setGps').value) // The Tolerance (e.g., 150)
-    };
-
-    localStorage.setItem('smart_config', JSON.stringify(newConfig));
-    alert("System Rules Updated. User dashboards will now sync to this location.");
-}
 // --- USER MANAGEMENT ---
 function adduser() {
     const name = document.getElementById('newUserName').value.trim();
@@ -147,9 +160,13 @@ function adduser() {
     saveData('smart_users', users);
     
     alert(`Success: ${name} is now registered.`);
-    document.getElementById('addUserForm').reset();
+    const addUserForm = document.getElementById('addUserForm');
+    if (addUserForm) addUserForm.reset();
+    
     stopCamera();
-    document.getElementById('reg-video-container').style.display = 'none';
+    const videoContainer = document.getElementById('reg-video-container');
+    if (videoContainer) videoContainer.style.display = 'none';
+    
     refreshData();
 }
 
@@ -167,7 +184,7 @@ function refreshData() {
     const userTable = document.getElementById('allUsersTableBody');
     if (userTable) {
         const countEl = document.getElementById('userCount');
-        if(countEl) countEl.innerText = users.length;
+        if (countEl) countEl.innerText = users.length;
         
         userTable.innerHTML = users.length ? users.map((u, i) => `
             <tr>
@@ -204,7 +221,7 @@ function refreshData() {
 
 function filterLogs() {
     const dateInput = document.getElementById('attendance-date');
-    if(!dateInput) return;
+    if (!dateInput) return;
     const filtered = attendanceLogs.filter(l => l.date === dateInput.value);
     const body = document.getElementById('fullLogTableBody');
 
@@ -225,7 +242,11 @@ function filterLogs() {
 function renderAnalytics() {
     const total = users.length;
     const analyticsPercentage = document.getElementById('attendancePercentage');
-    if (!analyticsPercentage || total === 0) return;
+    if (!analyticsPercentage) return;
+    if (total === 0) {
+        analyticsPercentage.innerText = "0%";
+        return;
+    }
 
     const today = new Date().toISOString().split('T')[0];
     const loggedInToday = attendanceLogs.filter(l => l.date === today);
@@ -235,13 +256,13 @@ function renderAnalytics() {
     analyticsPercentage.innerText = rate + "%";
     
     const bar = document.getElementById('reportProgressBar');
-    if(bar) bar.style.width = rate + "%";
+    if (bar) bar.style.width = rate + "%";
 
     const loggedIds = loggedInToday.map(l => l.id);
     const missing = users.filter(u => !loggedIds.includes(u.id));
     
     const absentList = document.getElementById('absentList');
-    if(absentList) {
+    if (absentList) {
         absentList.innerHTML = missing.map(u => `
             <li style="padding: 10px 0; border-bottom: 1px solid #eee; color: #e74c3c; display: flex; justify-content: space-between;">
                 <span><b>ID-${u.id}:</b> ${u.name}</span>
@@ -256,7 +277,7 @@ function saveProfile() {
     const name = document.getElementById('setAdminName').value.trim();
     const email = document.getElementById('setAdminEmail').value.trim();
 
-    if(name && email) {
+    if (name && email) {
         config.adminName = name;
         config.adminEmail = email;
         saveData('smart_config', config);
@@ -265,14 +286,22 @@ function saveProfile() {
 }
 
 function saveSystemRules() {
-    config.institute = document.getElementById('setInstitute').value;
-    config.lat = parseFloat(document.getElementById('setLat').value);
-    config.lng = parseFloat(document.getElementById('setLng').value);
-    config.gps = parseInt(document.getElementById('setGps').value);
+    const instInput = document.getElementById('setInstitute');
+    const latInput = document.getElementById('setLat');
+    const lngInput = document.getElementById('setLng');
+    const gpsInput = document.getElementById('setGps');
+
+    config.institute = instInput ? instInput.value : config.institute;
+    config.lat = latInput ? parseFloat(latInput.value) : config.lat;
+    config.lng = lngInput ? parseFloat(lngInput.value) : config.lng;
+    config.gps = gpsInput ? parseInt(gpsInput.value) : config.gps;
     
     saveData('smart_config', config);
-    document.getElementById('displayLocation').innerText = config.institute;
-    alert("System Rules Saved.");
+    
+    const displayLocation = document.getElementById('displayLocation');
+    if (displayLocation) displayLocation.innerText = config.institute;
+    
+    alert("System Rules Saved. User dashboards will now sync to this location.");
 }
 
 function applyConfig() {
@@ -300,19 +329,20 @@ function saveData(key, val) {
     localStorage.setItem(key, JSON.stringify(val)); 
 }
 
+// Generates an alphanumeric temporary entry credential
 function generatePass() {
     const pass = Math.random().toString(36).slice(-8).toUpperCase();
     const passInput = document.getElementById("newUserPass");
-    if(passInput) passInput.value = pass;
+    if (passInput) passInput.value = pass;
 }
 
 async function openRegistrationCam() {
     const video = document.getElementById('reg-webcam');
     const container = document.getElementById('reg-video-container');
-    if(container) container.style.display = 'block';
+    if (container) container.style.display = 'block';
     try {
         currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if(video) video.srcObject = currentStream;
+        if (video) video.srcObject = currentStream;
     } catch (err) { 
         alert("Camera access denied."); 
     }
@@ -334,7 +364,7 @@ function searchUsers() {
 }
 
 function exportCSV() {
-    if(!attendanceLogs.length) return alert("No logs available.");
+    if (!attendanceLogs.length) return alert("No logs available.");
     let csv = "Date,ID,Name,CheckIn,CheckOut\n";
     attendanceLogs.forEach(l => {
         csv += `${l.date},${l.id},${l.name},${l.checkIn},${l.checkOut || 'N/A'}\n`;
