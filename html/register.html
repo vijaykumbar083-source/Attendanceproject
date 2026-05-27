@@ -2,23 +2,71 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Register | FaceMark</title>
-    <link rel="stylesheet" href="../design/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration | FaceMark</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="../design/register.css" rel="stylesheet">
 </head>
-<body class="auth-page">
-    <div class="login-card">
-        <h2>Admin Register</h2>
-        <form>
-            <div class="input-group"><label>First Name</label><input type="text" id="fname" required></div>
-            <div class="input-group"><label>Last Name</label><input type="text" id="lname" required></div>
-            <div class="input-group"><label>Email</label><input type="email" id="email" required></div>
-            <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
-            <div class="input-group"><label>Confirm Password</label><input type="password" id="confirm-password" required></div>
-            <button type="button" onclick="handleAdminRegister()" class="btn-primary">Register Admin</button>
-        </form>
-        <div class="footer-links"><a href="adminlogin.html">Back to Login</a></div>
-        <div class="footer-links"><a href="../index.html">Home Page</a></div>
+<body>
+
+    <div class="auth-page">
+        <div class="login-card">
+            
+            <div class="icon-square">
+                <i class="bx bxs-user-plus"></i>
+            </div>
+            
+            <h2>Create Account</h2>
+            <p>Register your details below to link your biometric signature to the attendance tracking grid.</p>
+            
+            <form id="publicRegisterForm" onsubmit="event.preventDefault();">
+                
+                <div class="input-group">
+                    <label for="regName">Full Name</label>
+                    <input type="text" id="regName" placeholder="Enter full name" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="regId">Student / Employee ID</label>
+                    <input type="text" id="regId" placeholder="Enter unique registration ID" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="regEmail">Email Address</label>
+                    <input type="email" id="regEmail" placeholder="name@institution.ac.in" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="regPass">Password</label>
+                    <input type="password" id="regPass" placeholder="Create a secure password" required>
+                </div>
+
+                <div class="input-group">
+                    <button type="button" class="btn-setup" onclick="openRegistrationCam()">
+                        <i class="bx bx-camera"></i> Setup Face Link
+                    </button>
+                </div>
+
+                <div id="camera-wrapper" style="display: none;" class="camera-container">
+                    <span class="camera-legend">Biometric Viewport</span>
+                    <video id="reg-webcam" autoplay muted></video>
+                    <p>✨ Positioning face into tracking viewport...</p>
+                </div>
+
+                <div>
+                    <button type="button" class="btn-submit" onclick="registerNewUser()">
+                        Submit Registration &rarr;
+                    </button>
+                </div>
+            </form>
+            
+            <div class="footer-links">
+                Already have an account? <a href="userlogin.html">Login here</a>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
     <script src="../javascript/auth.js"></script>
 </body>
 </html>

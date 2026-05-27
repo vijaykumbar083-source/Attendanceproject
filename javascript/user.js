@@ -1,7 +1,6 @@
-// --- CONFIG & DATA ---
+
 const activeSession = sessionStorage.getItem('active_user');
 
-// Redirect if not logged in
 if (!activeSession) {
     alert("Unauthorized access. Please login first.");
     window.location.href = "index.html"; 
@@ -11,18 +10,15 @@ const currentUser = JSON.parse(activeSession);
 let attendanceData = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
 let currentStream = null;
 
-/** 
- * DYNAMIC CONFIGURATION 
- * We initialize this as null; it will be populated by GPS on-the-fly.
- */
-let systemConfig = {
+
+let systemConfig = JSON.parse(localStorage.getItem('smart_config')) || {
     lat: null,
     lng: null,
-    gps: 100, // Still use 100m as a standard tolerance radius
+    gps: 100, 
     institute: "Detecting Location..."
 };
 
-// --- 3. UI INITIALIZATION ---
+
 document.addEventListener('DOMContentLoaded', () => {
     const profName = document.getElementById('profName');
     const profId = document.getElementById('profId');
@@ -37,44 +33,47 @@ document.addEventListener('DOMContentLoaded', () => {
     updateUI();
     renderUserHistory();
     
-    // Automatically start location detection on load to set the "Institute" name
+    
     initializeDynamicLocation();
 });
 
-/**
- * NEW: Fetches real-time building name and coordinates
- */
+
 async function initializeDynamicLocation() {
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude } = position.coords;
         
-        systemConfig.lat = latitude;
-        systemConfig.lng = longitude;
+        if (!systemConfig.lat) {
+            systemConfig.lat = latitude;
+            systemConfig.lng = longitude;
+        }
 
         try {
-            // Reverse Geocode using OpenStreetMap (Free)
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`
             );
             const data = await response.json();
             
-            // Try to find the most relevant building/institute name
-            systemConfig.institute = data.address.amenity || 
+            const detectedLocation = data.address.amenity || 
                                      data.address.university || 
                                      data.address.building || 
                                      data.display_name.split(',')[0];
             
-            console.log("Dynamic Institute Detected:", systemConfig.institute);
-            updateUI(); // Refresh UI to show the real institute name
+            if (systemConfig.institute === "Detecting Location...") {
+                systemConfig.institute = detectedLocation;
+            }
+            
+            updateUI(); 
         } catch (error) {
-            systemConfig.institute = "Current Location";
+            if (systemConfig.institute === "Detecting Location...") {
+                systemConfig.institute = "Current Location";
+            }
         }
     });
 }
 
-// --- NAVIGATION ---
+
 function showContent(id, element) {
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     const target = document.getElementById(id);
@@ -83,74 +82,86 @@ function showContent(id, element) {
     if(element) element.classList.add('active');
 }
 
-// --- STEP 1: REAL GPS VERIFICATION ---
+
 function verifyGPS() {
     const btn = document.getElementById('loc-btn');
     const text = document.getElementById('loc-text');
     
-    // Load the LATEST config saved by the Admin
-    const config = JSON.parse(localStorage.getItem('smart_config'));
+    
+    const adminConfig = JSON.parse(localStorage.getItem('smart_config')) || systemConfig;
+
+    if (!adminConfig.lat || !adminConfig.lng) {
+        text.innerText = "Error: Admin hasn't initialized center coordinates.";
+        text.style.color = "orange";
+        return;
+    }
 
     navigator.geolocation.getCurrentPosition((position) => {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
 
-        // Calculate distance between USER and ADMIN-SET Campus Center
-        const distance = calculateDistance(userLat, userLng, config.lat, config.lng);
+        
+        const distance = calculateDistance(userLat, userLng, adminConfig.lat, adminConfig.lng);
+        const allowedRadius = adminConfig.gps || 100;
 
-        if (distance <= config.gps) {
-            text.innerText = "Verified: Inside Campus";
+        if (distance <= allowedRadius) {
+            text.innerText = `Verified: Inside ${adminConfig.institute || 'Campus'}`;
             text.style.color = "green";
             unlockFaceStep();
         } else {
-            // This is where your 107m error was coming from
-            text.innerText = `Out of Range (${Math.round(distance)}m from ${config.institute})`;
+            text.innerText = `Out of Range (${Math.round(distance)}m from ${adminConfig.institute || 'Campus Center'})`;
             text.style.color = "red";
             btn.disabled = false;
         }
     }, (err) => { 
-        /* error handling */ 
+        alert("GPS Error: Access denied or timed out.");
     }, { enableHighAccuracy: true });
 }
 
 function unlockFaceStep() {
     const scanBtn = document.getElementById('scan-btn');
-    scanBtn.disabled = false;
-    scanBtn.innerHTML = "<i class='bx bx-scan'></i> Start Face Scan";
-    scanBtn.style.background = "#008080";
+    if (scanBtn) {
+        scanBtn.disabled = false;
+        scanBtn.innerHTML = "<i class='bx bx-scan'></i> Start Face Scan";
+        scanBtn.style.background = "#008080";
+    }
 }
 
-// --- STEP 2: BIOMETRIC SCAN ---
 async function startBiometricScan() {
     const container = document.getElementById('camera-container');
     const video = document.getElementById('webcam');
     const scanBtn = document.getElementById('scan-btn');
 
-    container.style.display = "block";
-    scanBtn.innerText = "Processing...";
+    if (container) container.style.display = "block";
+    if (scanBtn) scanBtn.innerText = "Processing...";
 
     try {
         currentStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = currentStream;
+        if (video) video.srcObject = currentStream;
 
         setTimeout(() => {
             processAttendance();
             stopCamera();
-            container.style.display = "none";
+            if (container) container.style.display = "none";
         }, 3000);
 
     } catch (err) {
         alert("Camera Access Denied.");
-        container.style.display = "none";
-        scanBtn.innerText = "Retry Scan";
+        if (container) container.style.display = "none";
+        if (scanBtn) scanBtn.innerText = "Retry Scan";
     }
 }
 
-// --- ATTENDANCE PROCESSING ---
+
 function processAttendance() {
     const today = new Date().toISOString().split('T')[0];
     const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     
+    
+    attendanceData = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
+    const adminConfig = JSON.parse(localStorage.getItem('smart_config')) || systemConfig;
+    const currentInstitute = adminConfig.institute || "Campus Center";
+
     let userLog = attendanceData.find(log => log.id === currentUser.id && log.date === today);
 
     if (!userLog) {
@@ -160,9 +171,9 @@ function processAttendance() {
             name: currentUser.name,
             checkIn: now,
             checkOut: null,
-            location: systemConfig.institute // This is now the dynamic building name
+            location: currentInstitute
         });
-        alert(`Check-in Successful at ${systemConfig.institute}!`);
+        alert(`Check-in Successful at ${currentInstitute}!`);
     } else if (!userLog.checkOut) {
         userLog.checkOut = now;
         alert("Check-out Successful!");
@@ -175,24 +186,31 @@ function processAttendance() {
 
 function updateUI() {
     const today = new Date().toISOString().split('T')[0];
+    const adminConfig = JSON.parse(localStorage.getItem('smart_config')) || systemConfig;
+    const currentInstitute = adminConfig.institute || "Campus";
+
+    // Refresh memory data instance mapping arrays dynamically 
+    attendanceData = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
     const userLog = attendanceData.find(log => log.id === currentUser.id && log.date === today);
+    
     const statusBox = document.getElementById('session-status-container');
     const scanBtn = document.getElementById('scan-btn');
 
-    // Update displayed Institute name if an element exists
-    const instEl = document.getElementById('displayInstituteName');
-    if (instEl) instEl.innerText = systemConfig.institute;
-
     if (!userLog) {
-        if (statusBox) statusBox.innerHTML = `<p>Ready for Check-in at ${systemConfig.institute}</p>`;
+        if (statusBox) statusBox.innerHTML = `<p>Ready for Check-in at <b>${currentInstitute}</b></p>`;
     } else if (!userLog.checkOut) {
-        if (statusBox) statusBox.innerHTML = `<p style="color:#008080;">Signed In at ${userLog.checkIn}</p>`;
-        if (scanBtn) scanBtn.innerText = "Check Out";
+        if (statusBox) statusBox.innerHTML = `<p style="color:#008080;">Signed In at <b>${userLog.checkIn}</b></p>`;
+        if (scanBtn) {
+            scanBtn.innerText = "Check Out";
+            scanBtn.disabled = false;
+            scanBtn.style.background = "orange";
+        }
     } else {
-        if (statusBox) statusBox.innerHTML = "<p style=\"color:green;\">Attendance Complete</p>";
+        if (statusBox) statusBox.innerHTML = "<p style=\"color:green; font-weight:bold;\">✨ Attendance Complete for Today</p>";
         if (scanBtn) {
             scanBtn.innerText = "Done for Today";
             scanBtn.disabled = true;
+            scanBtn.style.background = "#ccc";
         }
     }
 }
@@ -201,25 +219,46 @@ function renderUserHistory() {
     const historyTable = document.getElementById('userHistoryTable');
     if (!historyTable) return;
 
-    const myLogs = attendanceData.filter(log => log.id === currentUser.id).reverse();
+    attendanceData = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
     
+    
+    const myLogs = attendanceData.filter(log => log.id === currentUser.id);
+    
+
+    const uniqueGlobalDays = [...new Set(attendanceData.map(log => log.date))];
+    const totalSystemDays = uniqueGlobalDays.length || 1; 
+
+    
+    const userDistinctDays = [...new Set(myLogs.map(log => log.date))].length;
+
+    
+    const calculatedPercentage = Math.round((userDistinctDays / totalSystemDays) * 100);
+
     const totalDaysEl = document.getElementById('statTotalDays');
     const percentEl = document.getElementById('statPercentage');
     
-    if (totalDaysEl) totalDaysEl.innerText = myLogs.length;
-    if (percentEl) percentEl.innerText = Math.min(Math.round((myLogs.length / 22) * 100), 100) + "%";
+    if (totalDaysEl) totalDaysEl.innerText = `${userDistinctDays} / ${totalSystemDays} Days`;
+    if (percentEl) {
+        percentEl.innerText = calculatedPercentage + "%";
+        
+        
+        if (calculatedPercentage >= 75) percentEl.style.color = "#2e7d32";
+        else if (calculatedPercentage >= 50) percentEl.style.color = "#e65100";
+        else percentEl.style.color = "#e74c3c";
+    }
 
-    historyTable.innerHTML = myLogs.map(log => `
+    
+    const displayLogs = [...myLogs].reverse();
+    historyTable.innerHTML = displayLogs.length ? displayLogs.map(log => `
         <tr>
             <td>${log.date}</td>
-            <td>${log.checkIn}</td>
-            <td>${log.checkOut || '--'}</td>
-            <td>${log.location}</td>
+            <td><b style="color:#008080">${log.checkIn}</b></td>
+            <td><b style="color:${log.checkOut ? 'orange' : '#666'}">${log.checkOut || 'Active'}</b></td>
+            <td><i class='bx bx-current-location'></i> ${log.location}</td>
         </tr>
-    `).join('');
+    `).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px;">No historical data available.</td></tr>';
 }
 
-// Haversine formula remains as a utility if you ever want to lock to a specific dynamic anchor
 function calculateDistance(lat1, lon1, lat2, lon2) {
     const R = 6371e3; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -232,10 +271,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 function stopCamera() {
-    if (currentStream) currentStream.getTracks().forEach(t => t.stop());
+    if (currentStream) {
+        currentStream.getTracks().forEach(t => t.stop());
+        currentStream = null;
+    }
 }
 
 function userLogout() {
+    stopCamera();
     sessionStorage.removeItem('active_user');
     window.location.href = "../index.html";
 }

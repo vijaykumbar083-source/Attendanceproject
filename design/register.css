@@ -93,7 +93,7 @@ label {
 input {
     width: 100%;
     padding: 12px 16px;          
-    background: #ffffff;
+    background: #f0f4f9;        /* Soft tinted background matching your image input fields */
     border: 1px solid #cbd5e1; 
     border-radius: 12px;         
     color: #0f172a;
@@ -113,7 +113,7 @@ input:focus {
 }
 
 /* --- COMPONENT BUTTONS & LINKS (Treated as actions) --- */
-.btn-primary, .login-card a {
+.btn-primary, .login-card a, .btn-submit {
     display: block;
     width: 100%;
     text-align: center;
@@ -131,7 +131,7 @@ input:focus {
     transition: all 0.2s ease;
 }
 
-.btn-primary:hover, .login-card a:hover {
+.btn-primary:hover, .login-card a:hover, .btn-submit:hover {
     transform: translateY(-1px); 
     background: #006666;        /* Controlled secondary darker deep interactive click accent overlay */
     box-shadow: 0 6px 16px rgba(0, 102, 102, 0.35);
@@ -179,8 +179,8 @@ input:focus {
     transform: none;
 }
 
-/* --- REGISTRATION FIELDSET --- */
-fieldset {
+/* --- REGISTRATION FIELDSET / CAMERA CONTAINER --- */
+fieldset, .camera-container {
     border: 1px solid var(--glass-border);
     border-radius: 15px;
     padding: 1.5rem;
@@ -188,10 +188,43 @@ fieldset {
     background: #f8fafc;
 }
 
-legend {
+legend, .camera-legend {
     color: var(--accent-cyan);
     font-weight: 700;
     padding: 0 10px;
     font-size: 0.8rem;
     text-transform: uppercase;
+    display: block;
+    margin-bottom: 5px;
+}
+
+/* --- SPECIFIC EXTENSIONS FOR REGISTRATION GATEWAY --- */
+.btn-setup {
+    background: transparent;
+    color: var(--accent-cyan);
+    border: 2px solid var(--accent-cyan);
+    box-shadow: none;
+    margin-bottom: 10px;
+}
+
+.btn-setup:hover {
+    background: rgba(0, 128, 128, 0.05);
+    color: #006666;
+    box-shadow: none;
+}
+
+video {
+    width: 100%;
+    border-radius: 12px;
+    border: 2px solid var(--accent-cyan);
+    background: #000000;
+    margin-top: 8px;
+}
+
+#camera-wrapper p {
+    text-align: center;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--accent-cyan);
+    font-weight: 600;
 }

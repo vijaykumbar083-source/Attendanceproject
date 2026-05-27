@@ -1,11 +1,8 @@
-// --- GLOBAL STATE & PERSISTENCE ---
+
 let users = JSON.parse(localStorage.getItem('smart_users')) || [];
 let attendanceLogs = JSON.parse(localStorage.getItem('smart_attendance_data')) || [];
 
-/** 
- * DYNAMIC CONFIG 
- * Initialized with empty/generic values to be filled by live detection
- */
+
 let config = JSON.parse(localStorage.getItem('smart_config')) || {
     adminName: "Admin User",
     adminEmail: "admin@institution.ac.in",
@@ -17,19 +14,19 @@ let config = JSON.parse(localStorage.getItem('smart_config')) || {
 
 let currentStream = null;
 
-// Initialize Dashboard
+
 document.addEventListener('DOMContentLoaded', () => {
     const dateInput = document.getElementById('attendance-date');
     if (dateInput) dateInput.valueAsDate = new Date();
     
-    // Automatically try to detect where the Admin is currently managing from
+    
     detectCurrentAdminLocation();
     
     applyConfig();
     refreshData();
 });
 
-// --- DYNAMIC LOCATION DETECTION (On Load) ---
+
 async function detectCurrentAdminLocation() {
     if (!navigator.geolocation) return;
 
@@ -42,7 +39,7 @@ async function detectCurrentAdminLocation() {
             );
             const data = await response.json();
             
-            // Comprehensive fallback parsing chain for real location names
+            
             const detectedName = data.address.amenity || 
                                  data.address.university || 
                                  data.address.building || 
@@ -53,7 +50,7 @@ async function detectCurrentAdminLocation() {
                                  data.address.city ||
                                  data.display_name.split(',')[0];
 
-            // Update UI element if it exists
+            
             const displayLoc = document.getElementById('displayLocation');
             if (displayLoc) displayLoc.innerText = detectedName;
             
@@ -63,7 +60,7 @@ async function detectCurrentAdminLocation() {
     });
 }
 
-// --- CORE NAVIGATION ---
+
 function showContent(id, element) {
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     const target = document.getElementById(id);
@@ -72,10 +69,10 @@ function showContent(id, element) {
     document.querySelectorAll('#list li').forEach(l => l.classList.remove('active'));
     if (element) element.classList.add('active');
 
-    if (id === 'Rcontent') renderAnalytics();
+    if (id === 'Rcontent' || id === 'Dcontent') renderAnalytics();
 }
 
-// --- REAL GPS TRACKER LOGIC ---
+
 async function captureAdminLocation() {
     const gpsStatus = document.getElementById('gpsStatus');
     const latInput = document.getElementById('setLat');
@@ -92,16 +89,16 @@ async function captureAdminLocation() {
     navigator.geolocation.getCurrentPosition(async (position) => {
         const { latitude, longitude, accuracy } = position.coords;
 
-        // Populate dynamic coordinate inputs
+        
         if (latInput) latInput.value = latitude.toFixed(6);
         if (lngInput) lngInput.value = longitude.toFixed(6);
         
         try {
-            // Reverse Geocode using OpenStreetMap Nominatim
+            
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18`);
             const data = await res.json();
             
-            // Progressive lookup chain ensuring real location names are assigned
+            
             let realLocationName = "";
             if (data && data.address) {
                 realLocationName = data.address.amenity || 
@@ -135,7 +132,7 @@ async function captureAdminLocation() {
     }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
-// --- USER MANAGEMENT ---
+
 function adduser() {
     const name = document.getElementById('newUserName').value.trim();
     const id = document.getElementById('newUserId').value.trim();
@@ -179,26 +176,53 @@ function removeUser(index) {
     }
 }
 
-// --- DYNAMIC RENDERING ---
+
 function refreshData() {
     const userTable = document.getElementById('allUsersTableBody');
     if (userTable) {
         const countEl = document.getElementById('userCount');
         if (countEl) countEl.innerText = users.length;
         
-        userTable.innerHTML = users.length ? users.map((u, i) => `
-            <tr>
-                <td>${u.name}</td>
-                <td>${u.email}</td>
-                <td><b>${u.id}</b></td>
-                <td style="color: #008080; font-weight: 600;">✔ Active</td>
-                <td>
-                    <button class="btn-outline" style="border-color:#e74c3c; color:#e74c3c; cursor:pointer;" onclick="removeUser(${i})">
-                        <i class='bx bx-trash'></i> Delete
-                    </button>
-                </td>
-            </tr>
-        `).join('') : '<tr><td colspan="5" style="text-align:center; padding:20px;">No users found.</td></tr>';
+        
+        const uniqueDaysInLogs = [...new Set(attendanceLogs.map(l => l.date))];
+        const totalDaysTracked = uniqueDaysInLogs.length || 1; 
+
+        userTable.innerHTML = users.length ? users.map((u, i) => {
+            
+        
+            const userLoggedDays = [...new Set(
+                attendanceLogs.filter(log => log.id === u.id).map(log => log.date)
+            )];
+            const attendedDaysCount = userLoggedDays.length;
+
+            
+            const finalPercentage = Math.min(Math.round((attendedDaysCount / totalDaysTracked) * 100), 100);
+
+            
+            let badgeStyle = "background: #e8f5e9; color: #2e7d32;"; 
+            if (finalPercentage < 75) badgeStyle = "background: #fff3e0; color: #e65100;"; 
+            if (finalPercentage < 50) badgeStyle = "background: #ffdada; color: #e74c3c;"; 
+
+            return `
+                <tr>
+                    <td>${u.name}</td>
+                    <td>${u.email}</td>
+                    <td><b>${u.id}</b></td>
+                    <td style="color: #008080; font-weight: 600;">✔ Active</td>
+                    <td><b>${attendedDaysCount} / ${totalDaysTracked} Days</b></td>
+                    <td>
+                        <span style="${badgeStyle} padding: 4px 10px; border-radius: 4px; font-weight: bold; display: inline-block;">
+                            ${finalPercentage}%
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn-outline" style="border-color:#e74c3c; color:#e74c3c; cursor:pointer;" onclick="removeUser(${i})">
+                            <i class='bx bx-trash'></i> Delete
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }).join('') : '<tr><td colspan="7" style="text-align:center; padding:20px;">No users found.</td></tr>';
     }
 
     const today = new Date().toISOString().split('T')[0];
@@ -238,11 +262,12 @@ function filterLogs() {
     }
 }
 
-// --- ANALYTICS ---
+
 function renderAnalytics() {
     const total = users.length;
     const analyticsPercentage = document.getElementById('attendancePercentage');
     if (!analyticsPercentage) return;
+    
     if (total === 0) {
         analyticsPercentage.innerText = "0%";
         return;
@@ -252,7 +277,8 @@ function renderAnalytics() {
     const loggedInToday = attendanceLogs.filter(l => l.date === today);
     const presentCount = new Set(loggedInToday.map(l => l.id)).size;
     
-    const rate = Math.round((presentCount / total) * 100);
+    
+    const rate = Math.min(Math.round((presentCount / total) * 100), 100);
     analyticsPercentage.innerText = rate + "%";
     
     const bar = document.getElementById('reportProgressBar');
@@ -272,7 +298,6 @@ function renderAnalytics() {
     }
 }
 
-// --- SETTINGS & CONFIG ---
 function saveProfile() {
     const name = document.getElementById('setAdminName').value.trim();
     const email = document.getElementById('setAdminEmail').value.trim();
@@ -284,6 +309,7 @@ function saveProfile() {
         alert("Admin Profile Updated.");
     }
 }
+
 
 function saveSystemRules() {
     const instInput = document.getElementById('setInstitute');
@@ -324,12 +350,10 @@ function applyConfig() {
     }
 }
 
-// --- UTILITIES ---
 function saveData(key, val) { 
     localStorage.setItem(key, JSON.stringify(val)); 
 }
 
-// Generates an alphanumeric temporary entry credential
 function generatePass() {
     const pass = Math.random().toString(36).slice(-8).toUpperCase();
     const passInput = document.getElementById("newUserPass");
@@ -379,4 +403,38 @@ function exportCSV() {
 
 function logout() {
     if (confirm("Logout from Admin Panel?")) window.location.href = "../index.html";
+}
+
+
+
+
+function Reset() {
+    
+    const confirmReset = confirm("CRITICAL WARNING: This will completely delete all registered users, attendance history, and dashboard statistics. Only admin accounts will be saved. Do you want to proceed?");
+    
+    if (!confirmReset) {
+        return;
+    }
+
+  
+    const preservedAdmins = localStorage.getItem('facemark_admins');
+    const adminSessionToken = localStorage.getItem('adminSession');
+
+    
+    localStorage.clear();
+
+   
+    if (preservedAdmins) {
+        localStorage.setItem('facemark_admins', preservedAdmins);
+    }
+    if (adminSessionToken) {
+        localStorage.setItem('adminSession', adminSessionToken);
+    }
+
+   
+    localStorage.setItem('todays_presence_percent', '0%');
+
+
+    alert("System hard reset complete. All users and logs removed. Admins preserved.");
+    window.location.reload();
 }
